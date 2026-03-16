@@ -122,6 +122,10 @@ namespace Appr
                 Console.Write($"Объём {vol,6}: ");
                 KolmogorovTest(testSample, Func.F, silent: true);
             }
+            
+            Console.WriteLine("\nНажмите Enter для показа гистограммы с интервалами по формуле Стерджесса...");
+            Console.ReadLine();
+            histogram.UpdateData(data, (int)(1 + 3.322*Math.Log10(data.Length)));
 
             // Демонстрация гистограммы с разным числом карманов
             Console.WriteLine("\n Гистограмма с 5 карманами...");
