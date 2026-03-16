@@ -9,9 +9,6 @@ using Raylib_CSharp.Transformations;
 
 namespace Laba1.Histogram;
 
-/// <summary>
-/// Класс, управляющий окном с гистограммой в отдельном потоке.
-/// </summary>
 public class HistogramWindow : IDisposable
 {
     private readonly int _width;
@@ -25,17 +22,15 @@ public class HistogramWindow : IDisposable
     private double histogramMin;
     private double histogramMax;
 
-    /// <summary>Создаёт окно гистограммы (но не запускает его).</summary>
     public HistogramWindow(int width, int height, string title)
     {
         _width = width;
         _height = height;
         _title = title;
         _dataQueue = new ConcurrentQueue<(double[], int)>();
-        histogramData = [0.2f, 0.5f, 0.8f, 0.3f, 0.9f, 0.4f, 0.6f]; // данные по умолчанию
+        histogramData = []; // данные по умолчанию
     }
 
-    /// <summary>Запускает окно в отдельном потоке.</summary>
     public void Start()
     {
         if (_windowThread != null && _windowThread.IsAlive)
@@ -46,8 +41,6 @@ public class HistogramWindow : IDisposable
         _windowThread.Start();
     }
 
-    /// <summary>Обновляет данные гистограммы (потокобезопасно).</summary>
-    /// <param name="newData">Новый массив значений (0..1).</param>
     public void UpdateData(double[] newData, int barsCount)
     {
         // Кладём копию массива, чтобы избежать изменений извне
@@ -55,15 +48,13 @@ public class HistogramWindow : IDisposable
         _dataQueue.Enqueue((newDataCopy, barsCount));
     }
 
-    /// <summary>Закрывает окно и останавливает поток.</summary>
+    // Закрывает окно и останавливает поток.
     public void Close()
     {
         _cts?.Cancel();
-        // Не ждём принудительно завершения потока, чтобы избежать deadlock'а,
-        // но можно добавить ожидание с таймаутом, если нужно.
     }
 
-    /// <summary>Освобождение ресурсов.</summary>
+    // Освобождение ресурсов.
     public void Dispose()
     {
         Close();
@@ -76,7 +67,6 @@ public class HistogramWindow : IDisposable
         Raylib_CSharp.Logging.Logger.SetTraceLogLevel(Raylib_CSharp.Logging.TraceLogLevel.Warning);
         // Инициализация окна
         Window.Init(_width, _height, _title);
-        // Устанавливаем целевую частоту кадров
 
         // Основной цикл Raylib
         while (!Window.ShouldClose() && !_cts.Token.IsCancellationRequested)
@@ -90,8 +80,6 @@ public class HistogramWindow : IDisposable
             // Отрисовка
             Graphics.BeginDrawing();
             Graphics.ClearBackground(Color.RayWhite);
-
-
 
             DrawHistogram(histogramData, histogramMin, histogramMax);
 
@@ -120,7 +108,6 @@ public class HistogramWindow : IDisposable
             int index = (int) ((inputData[i] - min) / step);
             if (index >= barsCount) 
             {
-                Console.WriteLine(index);
                 index = barsCount - 1;
             }
             data[index] += 1;
@@ -162,7 +149,7 @@ public class HistogramWindow : IDisposable
             Graphics.DrawRectangleRec(new Rectangle(x, y, barWidth, barHeight), Color.Blue);
         }
 
-        // Подписи по оси X (снизу)
+        // Подписи по оси X
         int maxLabelsX = 10;
         int labelStepX = Math.Max(1, barsCount / maxLabelsX);
         for (int i = 0; i < barsCount; i += labelStepX)
@@ -172,13 +159,14 @@ public class HistogramWindow : IDisposable
             float xPos = margin + i * (barWidth + barXMargin);
             Graphics.DrawText(xLabel, (int)xPos, _height - margin + 5, 10, Color.DarkGray);
         }
+
         // Подпись правого края
         string rightLabel = maxX.ToString("0.00");
         float lastX = margin + barsCount * (barWidth + barXMargin) - 5f;
         Graphics.DrawText(rightLabel, (int)lastX, _height - margin + 5, 10, Color.DarkGray);
 
-        // ПОДПИСИ ПО ОСИ Y (СЛЕВА) — значения частот от 0 до maxFreq
-        int yLabelsCount = 5; // можно изменить при необходимости
+        // Подпись по Y
+        int yLabelsCount = 10;
         for (int j = 0; j <= yLabelsCount; j++)
         {
             double freqValue = maxFreq * j / yLabelsCount;
@@ -186,13 +174,10 @@ public class HistogramWindow : IDisposable
             float yPos = _height - margin - (float)(freqValue * graphHeight / maxFreq);
             
             // Форматируем подпись (целые числа, если freqValue целое, иначе с одним знаком)
-            string yLabel = freqValue.ToString("0.##");
+            string yLabel = freqValue.ToString("0");
             
             // Рисуем текст слева от графика (с небольшим отступом)
-            Graphics.DrawText(yLabel, (int)(margin - 40), (int)(yPos - 5), 10, Color.DarkGray);
-            
-            // Опционально: можно добавить тонкую линию сетки
-            // Graphics.DrawLine(margin - 5, yPos, margin, yPos, Color.LightGray);
+            Graphics.DrawText(yLabel, margin - 40, (int)(yPos - 5), 10, Color.DarkGray);
         }
     }
 }

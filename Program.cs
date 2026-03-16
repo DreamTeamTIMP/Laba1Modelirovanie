@@ -124,9 +124,28 @@ namespace Appr
             }
 
             // Демонстрация гистограммы с разным числом карманов
-            Console.WriteLine("\nНажмите Enter для показа гистограммы с 51 карманом...");
+            Console.WriteLine("\n Гистограмма с 5 карманами...");
+            histogram.UpdateData(data, 5);
+
+            // Демонстрация гистограммы с разным числом карманов
+            Console.WriteLine("\nНажмите Enter для показа гистограммы с 10 карманами...");
             Console.ReadLine();
-            histogram.UpdateData(data, 51);
+            histogram.UpdateData(data, 10);
+
+            // Демонстрация гистограммы с разным числом карманов
+            Console.WriteLine("\nНажмите Enter для показа гистограммы с 20 карманами...");
+            Console.ReadLine();
+            histogram.UpdateData(data, 20);
+
+            // Демонстрация гистограммы с разным числом карманов
+            Console.WriteLine("\nНажмите Enter для показа гистограммы с 30 карманами...");
+            Console.ReadLine();
+            histogram.UpdateData(data, 30);
+
+            // Демонстрация гистограммы с разным числом карманов
+            Console.WriteLine("\nНажмите Enter для показа гистограммы с 50 карманами...");
+            Console.ReadLine();
+            histogram.UpdateData(data, 50);
 
             Console.WriteLine("Нажмите Enter для показа гистограммы со 100 карманами...");
             Console.ReadLine();
@@ -136,17 +155,10 @@ namespace Appr
             Console.ReadLine();
             histogram.UpdateData(data, 200);
 
-            Console.WriteLine("Нажмите Enter для показа гистограммы с 500 карманами...");
-            Console.ReadLine();
-            histogram.UpdateData(data, 500);
-
-            Console.WriteLine("Нажмите Enter для показа гистограммы с 1000 карманами...");
-            Console.ReadLine();
-            histogram.UpdateData(data, 1000);
-
-            histogram.Close();
+            
             Console.WriteLine("Программа завершена. Нажмите Enter для выхода.");
             Console.ReadLine();
+            histogram.Close();
         }
 
         /// <summary>
