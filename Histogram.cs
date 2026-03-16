@@ -165,7 +165,7 @@ public class HistogramWindow : IDisposable
         float lastX = margin + barsCount * (barWidth + barXMargin) - 5f;
         Graphics.DrawText(rightLabel, (int)lastX, _height - margin + 5, 10, Color.DarkGray);
 
-        // Подпись по Y
+        // Подпись по оси Y
         int yLabelsCount = 10;
         for (int j = 0; j <= yLabelsCount; j++)
         {
@@ -173,10 +173,10 @@ public class HistogramWindow : IDisposable
             // Позиция Y, соответствующая этому значению частоты
             float yPos = _height - margin - (float)(freqValue * graphHeight / maxFreq);
             
-            // Форматируем подпись (целые числа, если freqValue целое, иначе с одним знаком)
+            // Форматируем подпись
             string yLabel = freqValue.ToString("0");
             
-            // Рисуем текст слева от графика (с небольшим отступом)
+            // Рисуем текст слева от графика
             Graphics.DrawText(yLabel, margin - 40, (int)(yPos - 5), 10, Color.DarkGray);
         }
     }
