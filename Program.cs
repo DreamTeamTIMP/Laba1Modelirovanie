@@ -123,30 +123,26 @@ namespace Appr
                 KolmogorovTest(testSample, Func.F, silent: true);
             }
             
-            Console.WriteLine("\nНажмите Enter для показа гистограммы с интервалами по формуле Стерджесса...");
-            Console.ReadLine();
+            Console.WriteLine("\nГистограмма с интервалами по формуле Стерджесса...");
             histogram.UpdateData(data, (int)(1 + 3.322*Math.Log10(data.Length)));
 
             // Демонстрация гистограммы с разным числом карманов
-            Console.WriteLine("\n Гистограмма с 5 карманами...");
+            Console.WriteLine("\nНажмите Enter для показа гистограммы с 5 карманами...");
+            Console.ReadLine();
             histogram.UpdateData(data, 5);
 
-            // Демонстрация гистограммы с разным числом карманов
             Console.WriteLine("\nНажмите Enter для показа гистограммы с 10 карманами...");
             Console.ReadLine();
             histogram.UpdateData(data, 10);
 
-            // Демонстрация гистограммы с разным числом карманов
             Console.WriteLine("\nНажмите Enter для показа гистограммы с 20 карманами...");
             Console.ReadLine();
             histogram.UpdateData(data, 20);
 
-            // Демонстрация гистограммы с разным числом карманов
             Console.WriteLine("\nНажмите Enter для показа гистограммы с 30 карманами...");
             Console.ReadLine();
             histogram.UpdateData(data, 30);
 
-            // Демонстрация гистограммы с разным числом карманов
             Console.WriteLine("\nНажмите Enter для показа гистограммы с 50 карманами...");
             Console.ReadLine();
             histogram.UpdateData(data, 50);
