@@ -1,47 +1,21 @@
-﻿using Laba1.Histogram;
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
+using Laba1.Histogram;
 
 namespace Appr
 {
-    static class NormalPDF
-    {
-
-    }
-
-    static class Appr
-    {
-        public static void CreateAppr(int left, int right)
-        {
-            if (left > right) (right, left) = (left, right);
-            int intervals = right * 2;
-            double step = (right - left) / intervals;
-            Random rand = new();
-            rand.NextDouble();
-        }
-    }
-
     static class Func
     {
-        public static double f(double x)
-        {
-            return -0.5 * x + 1;
-        }
-
-        public static double F(double x)
-        {
-            return -0.25 * x * x + x;
-        }
-
-        public static double F1(double x)
-        {
-            if (1 - x < 0) throw new ArgumentException("Argument can't be negative!");
-            return 2 - 2 * Math.Sqrt(1 - x);
-        }
+        public static double f(double x) => 1 - 0.5 * x;
+        public static double F(double x) => x - 0.25 * x * x; // теоретическая функция распределения на [0,2]
+        public static double F1(double x) => 2 - 2 * Math.Sqrt(1 - x); // обратная функция
     }
 
     class Intervals
     {
         public readonly int Count;
-        
         private readonly List<double> data;
 
         public IReadOnlyList<double> Data => data;
@@ -49,133 +23,178 @@ namespace Appr
         public Intervals(int count)
         {
             Count = count;
-            data = [];
+            data = new List<double>(count + 1);
             Generate();
         }
 
         private void Generate()
         {
-            double NMinus1Value = 0;
-            data.Add(NMinus1Value);
-
-            Console.WriteLine("Intervals:");
-            Console.WriteLine($"0: {NMinus1Value}");
-            for (int i = 1; i < Count; i++)
+            // Прямое вычисление границ по формуле C_k = 2 - 2*sqrt(1 - k/Count)
+            for (int k = 0; k <= Count; k++)
             {
-                NMinus1Value = Func.F1(1.0 / Count + Func.F(NMinus1Value));
-                data.Add(NMinus1Value);
-                Console.WriteLine($"{i}: {NMinus1Value}");
+                double t = (double)k / Count;
+                double ck = 2 - 2 * Math.Sqrt(1 - t);
+                data.Add(ck);
             }
-            
 
-            // Последнее значение из-за погрешности иногда выходит за пределы поэтому его считаем отдельно
-            NMinus1Value = Func.F1(1);
-            data.Add(NMinus1Value);
-            Console.WriteLine($"{Count}: {NMinus1Value}");
+            Console.WriteLine("Границы интервалов (C_k):");
+            for (int i = 0; i < data.Count; i++)
+                Console.WriteLine($"C[{i}] = {data[i]:F6}");
         }
     }
 
     class MyRandom
     {
-        private Random rand = new();
-        
+        private Random rand = new Random();
+
         public double From0To1() => rand.NextDouble();
 
-        public double GetNum(Intervals intervals) 
+        public double GetNum(Intervals intervals)
         {
-            // Случайное число [0, 1) для выбора интервала
             double Xi = From0To1();
-
-            // Номер левой границы интервала
-            int k = (int) (intervals.Count * Xi);
-
-            // Случайное число [0, 1)
+            int k = (int)(intervals.Count * Xi);
             double Xi1 = From0To1();
-
-            // Нормализация случайного числа к интервалу
             double randNumInInterval = (intervals.Data[k + 1] - intervals.Data[k]) * Xi1;
-
-            // Финальное случайное число
-            // Левая граница + случайное число на интервале
-            double finalRandNum = intervals.Data[k] + randNumInInterval;
-            
-            return finalRandNum;  
+            return intervals.Data[k] + randNumInInterval;
         }
-        
 
-        // Немного более быстрый метод для получения сразу массива случайных чисел
         public double[] GetNNums(Intervals intervals, int N)
         {
-            if (N < 1) throw new ArgumentException("Can genarated only positive amount of numbers");
-            
+            if (N < 1) throw new ArgumentException("N должно быть положительным");
             double[] data = new double[N];
-
-            double Xi = From0To1();
             for (int i = 0; i < N; i++)
             {
-                int k = (int) ((intervals.Count) * Xi);
-                
-                Xi = From0To1();
-
-                double randNumInInterval = (intervals.Data[k + 1] - intervals.Data[k]) * Xi;
-                double finalRandNum = intervals.Data[k] + randNumInInterval;
-
-                data[i] = finalRandNum;
+                double Xi = From0To1();
+                int k = (int)(intervals.Count * Xi);
+                double Xi1 = From0To1();
+                double randNumInInterval = (intervals.Data[k + 1] - intervals.Data[k]) * Xi1;
+                data[i] = intervals.Data[k] + randNumInInterval;
             }
-
             return data;
         }
     }
 
     class Program
     {
-        static async Task Main(string[] args)
+        static void Main(string[] args)
         {
+            // Ввод параметров
+            Console.Write("Введите число интервалов λ (по умолчанию 20): ");
+            string lambdaInput = Console.ReadLine();
+            int lambda = string.IsNullOrEmpty(lambdaInput) ? 20 : int.Parse(lambdaInput);
+
+            Console.Write("Введите объём выборки N (по умолчанию 100000): ");
+            string nInput = Console.ReadLine();
+            int N = string.IsNullOrEmpty(nInput) ? 100000 : int.Parse(nInput);
+
             // Создаём и запускаем окно гистограммы
             using var histogram = new HistogramWindow(1280, 720, "Гистограмма");
             histogram.Start();
-            
-            Intervals intervals = new(20);
-            
-            MyRandom rand = new();
-            double[] data = rand.GetNNums(intervals, 100000);
 
-            Console.WriteLine();
-            double max = -1;
-            double min = 12312123;
-            double sum = 0;
-            double mean = 0;
-            for (int i = 0; i < data.Length; i++)
+            // Генерация основной выборки
+            Intervals intervals = new Intervals(lambda);
+            MyRandom rnd = new MyRandom();
+            double[] data = rnd.GetNNums(intervals, N);
+
+            // Статистика по выборке
+            double mean = data.Average();
+            double variance = data.Select(x => Math.Pow(x - mean, 2)).Sum() / (data.Length - 1);
+            double stdDev = Math.Sqrt(variance);
+            double min = data.Min();
+            double max = data.Max();
+
+            Console.WriteLine($"\nСтатистика по выборке (N = {N}):");
+            Console.WriteLine($"Минимум: {min:F6}");
+            Console.WriteLine($"Максимум: {max:F6}");
+            Console.WriteLine($"Среднее: {mean:F6}");
+            Console.WriteLine($"СКО: {stdDev:F6}");
+
+            // Критерий Колмогорова
+            Console.WriteLine("\n--- Критерий согласия Колмогорова ---");
+            KolmogorovTest(data, Func.F);
+
+            // Исследование влияния объёма выборки
+            Console.WriteLine("\n--- Исследование влияния объёма выборки ---");
+            int[] testVolumes = { 100, 1000, 10000, 100000 };
+            foreach (int vol in testVolumes)
             {
-                if (data[i] > max) max = data[i];
-                if (data[i] < min) min = data[i];
-                sum += data[i];
-                //Console.WriteLine($"{i}: {data[i]}");
+                double[] testSample = rnd.GetNNums(intervals, vol);
+                Console.Write($"Объём {vol,6}: ");
+                KolmogorovTest(testSample, Func.F, silent: true);
             }
-            mean = sum / data.Length;
-            Console.WriteLine($"Max: {max}");
-            Console.WriteLine($"Min: {min}");
-            Console.WriteLine($"Sum: {sum}");
-            Console.WriteLine($"Mean: {mean}");
-            
-            Console.ReadLine();
-            histogram.UpdateData(data, 50);
+
+            // Демонстрация гистограммы с разным числом карманов
+            Console.WriteLine("\nНажмите Enter для показа гистограммы с 51 карманом...");
             Console.ReadLine();
             histogram.UpdateData(data, 51);
+
+            Console.WriteLine("Нажмите Enter для показа гистограммы со 100 карманами...");
             Console.ReadLine();
             histogram.UpdateData(data, 100);
+
+            Console.WriteLine("Нажмите Enter для показа гистограммы с 200 карманами...");
             Console.ReadLine();
             histogram.UpdateData(data, 200);
+
+            Console.WriteLine("Нажмите Enter для показа гистограммы с 500 карманами...");
             Console.ReadLine();
             histogram.UpdateData(data, 500);
+
+            Console.WriteLine("Нажмите Enter для показа гистограммы с 1000 карманами...");
             Console.ReadLine();
             histogram.UpdateData(data, 1000);
-            Console.ReadLine();
 
-            // Даём время потоку окна завершиться
             histogram.Close();
-            await Task.Delay(500);
-            Console.WriteLine("Программа завершена.");
+            Console.WriteLine("Программа завершена. Нажмите Enter для выхода.");
+            Console.ReadLine();
+        }
+
+        /// <summary>
+        /// Выполняет критерий согласия Колмогорова
+        /// </summary>
+        /// <param name="data">Выборка значений</param>
+        /// <param name="F">Теоретическая функция распределения</param>
+        /// <param name="silent">Если true, выводится только статистика; иначе подробный вывод</param>
+        static void KolmogorovTest(double[] data, Func<double, double> F, bool silent = false)
+        {
+            Array.Sort(data);
+            int n = data.Length;
+            double maxDiff = 0.0;
+
+            for (int i = 0; i < n; i++)
+            {
+                double x = data[i];
+                double theor = F(x);
+                double empAfter = (i + 1) / (double)n; // F_эмп после скачка
+                double empBefore = i / (double)n;      // F_эмп до скачка
+
+                double diffAfter = Math.Abs(empAfter - theor);
+                double diffBefore = Math.Abs(empBefore - theor);
+
+                if (diffAfter > maxDiff) maxDiff = diffAfter;
+                if (diffBefore > maxDiff) maxDiff = diffBefore;
+            }
+
+            double lambda = maxDiff * Math.Sqrt(n);
+            // Приближённое p-value (для больших n)
+            double p = 2 * Math.Exp(-2 * lambda * lambda);
+
+            if (!silent)
+            {
+                Console.WriteLine($"Статистика D = {maxDiff:F6}");
+                Console.WriteLine($"lambda = D·√N = {lambda:F6}");
+                Console.WriteLine($"p-value = {p:F6}");
+                // Сравнение с критическим значением для уровня 0.05 (λ_крит ≈ 1.36)
+                double crit = 1.36;
+                if (lambda < crit)
+                    Console.WriteLine("lambda < 1.36 → гипотеза о согласии НЕ отвергается (уровень 0.05)");
+                else
+                    Console.WriteLine("lambda ≥ 1.36 → гипотеза о согласии отвергается (уровень 0.05)");
+            }
+            else
+            {
+                Console.WriteLine($"D = {maxDiff:F6}, λ = {lambda:F6} (p≈{p:F4})");
+            }
         }
     }
 }
